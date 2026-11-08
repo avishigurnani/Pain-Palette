@@ -1,0 +1,1400 @@
+<!--
+  PAIN PALETTE — READABLE SOURCE EDITION
+
+  What this file contains:
+  1. HTML defines the screens and controls.
+  2. CSS styles the screens, buttons, body map, and animations.
+  3. JavaScript stores answers, handles navigation, draws visuals,
+     calculates the prototype score, and creates a copyable summary.
+
+  The app's behavior and wording are kept intact. Formatting and
+  explanatory comments have been added to make the code easier to follow.
+
+  Important: this is still a concept prototype, not a validated medical
+  assessment tool. Its score must not be used to make medical decisions.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Pain Palette</title>
+<style>
+:root {
+  --bg:#0b0b16;
+  --panel:#14142a;
+  --line:#2a2a4a;
+  --ink:#f2f0ff;
+  --mute:#9a97c0;
+  --a:#a78bfa;
+  --b:#22d3ee;
+  --hot:#ff2d55;
+}
+html,body {
+  margin:0;
+  height:100%;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,"SF Pro Rounded","Segoe UI",Roboto,sans-serif;
+  overflow:hidden;
+}
+#app {
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  max-width:1100px;
+  margin:0 auto;
+  padding:12px 18px 14px;
+}
+header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.hr {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.ico {
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  width:44px;
+  height:40px;
+  font-size:20px;
+  padding:0;
+}
+.ico.off {
+  opacity:.45;
+}
+.brand {
+  font-weight:800;
+  font-size:20px;
+  letter-spacing:.3px;
+  background:linear-gradient(90deg,var(--a),var(--b));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.dots {
+  display:flex;
+  gap:8px;
+}
+.dot {
+  width:24px;
+  height:8px;
+  border-radius:8px;
+  background:var(--line);
+  transition:.3s;
+}
+.dot.on {
+  background:linear-gradient(90deg,var(--a),var(--b));
+  box-shadow:0 0 12px var(--a);
+}
+.dot.done {
+  background:var(--a);
+  opacity:.6;
+}
+h1 {
+  font-size:clamp(22px,3.4vw,32px);
+  margin:10px 0 2px;
+  font-weight:800;
+}
+.sub {
+  color:var(--mute);
+  font-size:clamp(14px,2vw,18px);
+  margin:0 0 8px;
+}
+main {
+  flex:1;
+  min-height:0;
+  position:relative;
+}
+.screen {
+  position:absolute;
+  inset:0;
+  display:none;
+  flex-direction:column;
+  min-height:0;
+}
+.screen.on {
+  display:flex;
+  animation:in .35s ease;
+}
+@keyframes in {
+  from {
+    opacity:0;
+    transform:translateY(10px);
+  }
+  transform:translateY(10px)}to {
+    opacity:1;
+    transform:none;
+  }
+  transform:none};
+}
+footer {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding-top:10px;
+}
+button {
+  font:inherit;
+  color:var(--ink);
+  border:0;
+  cursor:pointer;
+}
+.btn {
+  padding:14px 28px;
+  border-radius:16px;
+  font-weight:700;
+  font-size:18px;
+  background:linear-gradient(90deg,var(--a),var(--b));
+  color:#0b0b16;
+  box-shadow:0 0 22px rgba(167,139,250,.45);
+  transition:.2s;
+}
+.btn:active {
+  transform:scale(.96);
+}
+.btn[disabled] {
+  opacity:.3;
+  box-shadow:none;
+  pointer-events:none;
+}
+.btn.ghost {
+  background:var(--panel);
+  color:var(--ink);
+  box-shadow:none;
+  border:1px solid var(--line);
+}
+.hint {
+  color:var(--mute);
+  font-size:15px;
+  text-align:center;
+  flex:1;
+}
+/* intro */
+.intro {
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:14px;
+}
+.intro .logo {
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  background:conic-gradient(from 0deg,#22d3ee,#a78bfa,#ff2d55,#f59e0b,#22d3ee);
+  filter:blur(.5px);
+  animation:spin 8s linear infinite;
+  box-shadow:0 0 60px rgba(167,139,250,.6);
+  position:relative;
+}
+.intro .logo:after {
+  content:"";
+  position:absolute;
+  inset:18px;
+  border-radius:50%;
+  background:var(--bg);
+}
+@keyframes spin {
+  to {
+    transform:rotate(360deg);
+  }
+}
+.intro p {
+  max-width:560px;
+  color:var(--mute);
+  font-size:18px;
+  line-height:1.5;
+  margin:0;
+}
+.fine {
+  font-size:13px!important;
+  opacity:.75;
+}
+/* body step */
+.bodywrap {
+  flex:1;
+  min-height:0;
+  display:flex;
+  gap:18px;
+  align-items:stretch;
+}
+.figure {
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.figure svg {
+  height:100%;
+  max-height:100%;
+  width:auto;
+  max-width:100%;
+}
+.region {
+  fill:#1d1d3a;
+  stroke:#3b3b6b;
+  stroke-width:1.5;
+  cursor:pointer;
+  transition:fill .2s;
+}
+.region.sel {
+  fill:var(--hot);
+  stroke:#fff;
+  filter:drop-shadow(0 0 8px var(--hot));
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity:.6;
+  }
+}
+.side {
+  width:230px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.seg {
+  display:flex;
+  background:var(--panel);
+  border-radius:14px;
+  padding:4px;
+  border:1px solid var(--line);
+}
+.seg button {
+  flex:1;
+  background:none;
+  padding:12px;
+  border-radius:11px;
+  font-weight:700;
+  font-size:16px;
+  color:var(--mute);
+}
+.seg button.on {
+  background:linear-gradient(90deg,var(--a),var(--b));
+  color:#0b0b16;
+}
+.chips {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-content:flex-start;
+  overflow:auto;
+}
+.chip {
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:6px 12px;
+  font-size:14px;
+}
+.empty {
+  color:var(--mute);
+  font-size:15px;
+}
+/* textures */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  flex:1;
+  min-height:0;
+}
+.tex {
+  position:relative;
+  background:var(--panel);
+  border:2px solid var(--line);
+  border-radius:22px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  padding:0;
+  transition:.2s;
+}
+.tex canvas {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.tex span {
+  position:relative;
+  z-index:1;
+  font-size:20px;
+  font-weight:800;
+  padding:10px;
+  text-shadow:0 2px 8px #000;
+  width:100%;
+  text-align:center;
+  background:linear-gradient(transparent,rgba(0,0,0,.65));
+}
+.tex.sel {
+  border-color:var(--b);
+  box-shadow:0 0 26px var(--b);
+  transform:scale(1.02);
+}
+@media (max-width:760px) {
+  .grid {
+    grid-template-columns:repeat(2,1fr);
+  }
+  .side {
+    width:150px;
+  }
+}
+/* slider */
+.sliderwrap {
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+}
+#orb {
+  width:min(46vh,340px);
+  height:min(46vh,340px);
+}
+#track {
+  position:relative;
+  width:min(92%,820px);
+  height:74px;
+  border-radius:40px;
+  touch-action:none;
+  background:linear-gradient(90deg,#6b7280 0%,#7c8aa5 15%,#f59e0b 55%,#ff5a1f 78%,#ff1744 100%);
+  box-shadow:0 0 30px rgba(255,60,60,.25) inset;
+}
+#glow {
+  position:absolute;
+  inset:-6px;
+  border-radius:46px;
+  background:inherit;
+  filter:blur(16px);
+  opacity:.55;
+  z-index:-1;
+  animation:neon 1.6s ease-in-out infinite;
+}
+@keyframes neon {
+  50% {
+    opacity:.95;
+    filter:blur(24px);
+  }
+  filter:blur(24px)};
+}
+#knob {
+  position:absolute;
+  top:50%;
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  background:#fff;
+  transform:translate(-50%,-50%);
+  left:0;
+  box-shadow:0 0 0 6px rgba(255,255,255,.25),0 6px 20px rgba(0,0,0,.5);
+}
+.ends {
+  display:flex;
+  justify-content:space-between;
+  width:min(92%,820px);
+  color:var(--mute);
+  font-weight:700;
+}
+/* rhythm */
+.pad {
+  flex:1;
+  min-height:0;
+  position:relative;
+  border-radius:26px;
+  border:2px dashed var(--line);
+  background:radial-gradient(circle at 50% 50%,#1b1b3a,#0e0e20);
+  overflow:hidden;
+  touch-action:none;
+}
+.pad canvas {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.pad .msg {
+  position:absolute;
+  left:0;
+  right:0;
+  top:16%;
+  text-align:center;
+  font-size:clamp(22px,4vw,34px);
+  font-weight:800;
+  pointer-events:none;
+  text-shadow:0 0 20px #000;
+}
+.pad .msg small {
+  display:block;
+  font-size:16px;
+  color:var(--mute);
+  font-weight:500;
+  margin-top:6px;
+}
+.rrow {
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  align-items:center;
+  padding-top:10px;
+  flex-wrap:wrap;
+}
+.stat {
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:8px 16px;
+  font-weight:700;
+}
+/* onset + time options */
+textarea {
+  -webkit-user-select:text;
+  user-select:text;
+}
+.opts {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  flex:1;
+  min-height:0;
+}
+.opt {
+  background:var(--panel);
+  border:2px solid var(--line);
+  border-radius:22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-weight:800;
+  font-size:20px;
+  padding:10px;
+  text-align:center;
+  transition:.2s;
+}
+.opt i {
+  font-style:normal;
+  font-size:clamp(36px,8vh,64px);
+}
+.opt small {
+  color:var(--mute);
+  font-size:14px;
+  font-weight:600;
+}
+.opt.sel {
+  border-color:var(--b);
+  box-shadow:0 0 26px var(--b);
+  transform:scale(1.02);
+}
+@media (max-width:760px) {
+  .opts {
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+#hist {
+  flex:1;
+  min-height:0;
+  width:100%;
+  resize:none;
+  background:var(--panel);
+  color:var(--ink);
+  border:2px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  font:14px/1.4 ui-monospace,Menlo,monospace;
+}
+.tl {
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:14px 18px;
+  flex:none;
+}
+#tlc {
+  width:100%;
+  height:220px;
+  display:block;
+  margin-top:8px;
+}
+/* result */
+.result {
+  overflow:auto;
+  gap:14px;
+}
+.scorecard {
+  display:flex;
+  gap:22px;
+  align-items:center;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:18px 24px;
+  flex-wrap:wrap;
+}
+.ring {
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  flex:none;
+}
+.ring div {
+  width:118px;
+  height:118px;
+  border-radius:50%;
+  background:var(--panel);
+  display:grid;
+  place-items:center;
+  text-align:center;
+}
+.ring b {
+  font-size:44px;
+  line-height:1;
+}
+.ring small {
+  display:block;
+  color:var(--mute);
+  font-size:13px;
+}
+.lvl {
+  font-size:26px;
+  font-weight:800;
+}
+.rows {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+.row {
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:12px 16px;
+}
+.row h4 {
+  margin:0 0 4px;
+  color:var(--mute);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+}
+.row p {
+  margin:0;
+  font-size:17px;
+  font-weight:600;
+}
+.note {
+  color:var(--mute);
+  font-size:13px;
+  line-height:1.5;
+}
+@media (max-width:640px) {
+  .rows {
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+<body>
+<!-- Main app container: keeps the screens within a centered, full-height layout. -->
+<div id="app">
+  <!-- Header: app name, read-aloud controls, and progress indicators. -->
+  <header>
+    <div class="brand">Pain Palette</div>
+    <div class="hr">
+      <button class="ico" id="say" onclick="sayAgain()" aria-label="Read this page aloud">🔊</button>
+      <button class="ico" id="mute" onclick="toggleAuto()" aria-label="Turn automatic reading on or off">🔔</button>
+      <div class="dots" id="dots"></div>
+    </div>
+  </header>
+  <!-- Main area: only the currently active screen is shown here. -->
+  <main>
+
+    <!-- Welcome screen: explains the prototype before the questions begin. -->
+    <section class="screen intro on" id="s0">
+      <div class="logo"></div>
+      <h1>Pain Palette.</h1>
+      <p>Pain assessment tool for children, elderly and non-verbal people. Visit https://avishigurnani.com/paediatric-pain-palette/ for more information.</p>
+      <button class="btn" onclick="go(1)">Start</button>
+      <p class="fine">Prototype for a concept study. Not a medical device. The score is not clinically validated. Nothing is saved or sent anywhere.</p>
+    </section>
+
+    <!-- Step 1: select the body areas where pain is felt. -->
+    <section class="screen" id="s1">
+      <h1>1. Where does it hurt?</h1>
+      <p class="sub">Tap the body. Tap again to undo.</p>
+      <div class="bodywrap">
+        <div class="figure"><svg id="body" viewBox="0 0 200 420"></svg></div>
+        <div class="side">
+          <div class="seg"><button id="vf" class="on" onclick="setView('front')">Front</button><button id="vb" onclick="setView('back')">Back</button></div>
+          <div class="chips" id="chips"></div>
+        </div>
+      </div>
+      <footer><button class="btn ghost" onclick="go(0)">Back</button><div class="hint" id="h1">Pick at least one place</div><button class="btn" id="n1" onclick="go(2)" disabled>Next</button></footer>
+    </section>
+
+    <!-- Step 2: choose the visual description that best matches the pain. -->
+    <section class="screen" id="s2">
+      <h1>2. What does it feel like?</h1>
+      <p class="sub">Pick the one that looks most like your pain.</p>
+      <div class="grid" id="texgrid"></div>
+      <footer><button class="btn ghost" onclick="go(1)">Back</button><div class="hint">Pick one</div><button class="btn" id="n2" onclick="go(3)" disabled>Next</button></footer>
+    </section>
+
+    <!-- Step 3: choose an intensity on the grey-to-red slider. -->
+    <section class="screen" id="s3">
+      <h1>3. How strong is it?</h1>
+      <p class="sub">Slide from calm grey to angry red.</p>
+      <div class="sliderwrap">
+        <canvas id="orb" width="680" height="680"></canvas>
+        <div id="track"><div id="glow"></div><div id="knob"></div></div>
+        <div class="ends"><span>Just a little</span><span>The most ever</span></div>
+      </div>
+      <footer><button class="btn ghost" onclick="go(2)">Back</button><div class="hint" id="h3">Drag the circle</div><button class="btn" id="n3" onclick="go(4)" disabled>Next</button></footer>
+    </section>
+
+    <!-- Step 4: record whether the pain has a beat or stays constant. -->
+    <section class="screen" id="s4">
+      <h1>4. How does it move?</h1>
+      <p class="sub">Tap the beat of your pain. Or press and hold if it never stops.</p>
+      <div class="pad" id="pad"><canvas id="padc"></canvas><div class="msg" id="padmsg">Tap here<small>Tap the same beat as the pain</small></div></div>
+      <div class="rrow">
+        <span class="stat" id="st1">Taps: 0</span>
+        <span class="stat" id="st2">Beat: –</span>
+        <button class="btn ghost" onclick="resetRhythm()">Try again</button>
+        <button class="btn ghost" onclick="chooseConstant()">It never stops</button>
+      </div>
+      <footer><button class="btn ghost" onclick="go(3)">Back</button><div class="hint" id="h4"></div><button class="btn" id="n4" onclick="go(6)" disabled>Next</button></footer>
+    </section>
+
+    <!-- Step 5: record when the pain began. -->
+    <section class="screen" id="s6">
+      <h1>5. When did it start?</h1>
+      <p class="sub">Pick the one that fits best. A grown-up can help.</p>
+      <div class="opts" id="onsetgrid"></div>
+      <footer><button class="btn ghost" onclick="go(4)">Back</button><div class="hint">Pick one</div><button class="btn" id="n6" onclick="go(7)" disabled>Next</button></footer>
+    </section>
+
+    <!-- Step 6: record the times of day when the pain happens. -->
+    <section class="screen" id="s7">
+      <h1>6. When does it hurt?</h1>
+      <p class="sub">Tap every time of day it hurts. Tap the big one if it hurts all the time.</p>
+      <div class="opts" id="timegrid"></div>
+      <footer><button class="btn ghost" onclick="go(6)">Back</button><div class="hint">Pick at least one</div><button class="btn" id="n7" onclick="go(8)" disabled>Next</button></footer>
+    </section>
+
+    <!-- Step 7: optionally paste earlier summaries for a history timeline. -->
+    <section class="screen" id="s8">
+      <h1>7. Past checks (for a grown-up)</h1>
+      <p class="sub">Paste all your saved summaries here to see the pain timeline. First time? Leave it empty.</p>
+      <textarea id="hist" placeholder="Paste summaries here..." oninput="histInfo()"></textarea>
+      <footer><button class="btn ghost" onclick="go(7)">Back</button><div class="hint" id="h8">Nothing pasted</div><button class="btn" onclick="finish()">See result</button></footer>
+    </section>
+
+    <!-- Results: show the prototype score, answers, history chart, and copy controls. -->
+    <section class="screen result" id="s5">
+      <h1>Pain picture</h1>
+      <div class="scorecard">
+        <div class="ring" id="ring"><div><span><b id="sc">0</b><small>out of 10</small></span></div></div>
+        <div><div class="lvl" id="lvl"></div><p class="sub" id="lvlsub" style="margin:4px 0 0"></p></div>
+      </div>
+      <div class="rows" id="rows"></div>
+      <p class="note" id="clin"></p>
+      <div class="tl">
+        <div class="seg"><button id="tl_day" class="on" onclick="setRange('day')">Days</button><button id="tl_week" onclick="setRange('week')">Weeks</button><button id="tl_month" onclick="setRange('month')">Months</button></div>
+        <canvas id="tlc"></canvas>
+        <p class="note" id="tlnote"></p>
+      </div>
+      <div style="display:flex; gap:12px; flex-wrap:wrap">
+        <button class="btn" onclick="copySummary()" id="cpy">Copy summary</button>
+        <button class="btn ghost" onclick="restart()">Start again</button>
+      </div>
+      <p class="note">Tip: "Copy summary" copies this check plus all earlier ones. Save it in Notes, and paste it back at step 7 next time.</p>
+      <p class="note">Prototype only. The 0 to 10 score combines intensity (55%), texture (20%), rhythm (15%) and number of areas (10%) using placeholder weights that have not been clinically validated. Do not use it for medical decisions. Onset and timing are recorded in the summary but do not change the score.</p>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// Helper: find an HTML element by its id so the rest of the code can refer to it briefly.
+const $ = id => document.getElementById(id);
+// Shared answers: this object stores the choices made while moving through the questions.
+const state = { view: 'front', regions: new Set(), texture: null, intensity: null, rhythm: null, onset: null, times: new Set() };
+let step = 0;
+/* ---------- read aloud ---------- */
+// Spoken instructions: each screen has a short message for the read-aloud feature.
+const PROMPTS = {
+    0: 'Hi! Press the big Start button. I will ask you some questions about your pain.',
+    1: 'Where does it hurt? Tap the place on the body picture. You can pick more than one. Then press Next.',
+    2: 'What does your pain feel like? Tap the picture that looks most like your pain.',
+    3: 'How strong is your pain? Slide the white circle. Left means just a little. Right means the most ever.',
+    4: 'Watch the purple circle. Now tap the big box to the same beat as your pain. If your pain never stops, press the button that says it never stops.',
+    5: 'Here is the pain picture. A grown-up can copy the summary.',
+    6: 'When did the pain start? Tap the picture that fits best. A grown-up can help.',
+    7: 'When does it hurt? Tap morning, afternoon, evening or night. Tap the big one if it hurts all the time.',
+    8: 'Grown-up time. Paste your saved summaries here, or leave it empty if this is the first time. Then press See result.'
+};
+let autoRead = true, curPrompt = '', sayTimer = 0;
+const hasTTS = 'speechSynthesis' in window;
+if (!hasTTS) {
+    $('say').style.display = 'none';
+    $('mute').style.display = 'none';
+}
+// Read text aloud using the browser's speech feature, when the browser supports it.
+function speak(t) {
+    if (!hasTTS || !t)
+        return;
+    try {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(t);
+        u.rate = .9;
+        u.pitch = 1.05;
+        speechSynthesis.speak(u);
+    }
+    catch (e) { }
+}
+function sayAgain() { speak(curPrompt); }
+// Turn automatic reading on or off. The speaker button can still replay the current prompt.
+function toggleAuto() {
+    autoRead = !autoRead;
+    $('mute').textContent = autoRead ? '🔔' : '🔕';
+    $('mute').classList.toggle('off', !autoRead);
+    if (!autoRead && hasTTS)
+        speechSynthesis.cancel();
+}
+curPrompt = PROMPTS[0];
+/* ---------- navigation ---------- */
+const dotsEl = $('dots');
+for (let i = 1; i <= 7; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    dotsEl.appendChild(d);
+}
+const FLOW = [1, 2, 3, 4, 6, 7, 8];
+// Screen navigation: show one step, update progress dots, start or stop animations, and read the prompt.
+function go(n) {
+    step = n;
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === 's' + n));
+    const idx = FLOW.indexOf(n);
+    [...dotsEl.children].forEach((d, i) => { d.className = 'dot' + ((n === 5 || idx > i) ? ' done' : idx === i ? ' on' : ''); });
+    if (n === 2)
+        startTex();
+    else
+        stopTex();
+    if (n === 3) {
+        sizeOrb();
+        drawOrb();
+    }
+    if (n === 4) {
+        sizePad();
+        padLoop();
+    }
+    curPrompt = PROMPTS[n];
+    clearTimeout(sayTimer);
+    if (hasTTS)
+        speechSynthesis.cancel();
+    if (autoRead)
+        sayTimer = setTimeout(() => speak(curPrompt), 400);
+}
+/* ---------- step 1: body ---------- */
+// Body map: each entry contains an id, a label, and the SVG shape used to select that body area.
+const FRONT = [
+    ['head', 'Head', '<ellipse cx="100" cy="32" rx="26" ry="30"/>'],
+    ['throat', 'Throat / neck', '<rect x="89" y="60" width="22" height="20" rx="8"/>'],
+    ['chest', 'Chest', '<path d="M64 84 Q100 76 136 84 L134 138 Q100 146 66 138 Z"/>'],
+    ['belly', 'Belly', '<path d="M66 142 Q100 150 134 142 L130 204 Q100 214 70 204 Z"/>'],
+    ['hips', 'Hips / pelvis', '<path d="M70 208 Q100 218 130 208 L132 236 L68 236 Z"/>'],
+    ['lshoulder', 'Left shoulder / arm', '<path d="M60 86 L40 92 L30 170 L46 174 L64 120 Z"/>'],
+    ['rshoulder', 'Right shoulder / arm', '<path d="M140 86 L160 92 L170 170 L154 174 L136 120 Z"/>'],
+    ['lhand', 'Left hand', '<path d="M30 174 L46 178 L44 214 L28 210 Z"/>'],
+    ['rhand', 'Right hand', '<path d="M170 174 L154 178 L156 214 L172 210 Z"/>'],
+    ['lleg', 'Left leg / knee', '<path d="M70 240 L98 240 L94 330 L72 330 Z"/>'],
+    ['rleg', 'Right leg / knee', '<path d="M102 240 L130 240 L128 330 L106 330 Z"/>'],
+    ['lfoot', 'Left foot / shin', '<path d="M72 334 L94 334 L92 392 L64 392 Z"/>'],
+    ['rfoot', 'Right foot / shin', '<path d="M106 334 L128 334 L136 392 L108 392 Z"/>']
+];
+const BACK = FRONT.map(r => r.slice());
+function swap(arr, id, newId, label, svg) { const r = arr.find(x => x[0] === id); r[0] = newId; r[1] = label; if (svg)
+    r[2] = svg; }
+swap(BACK, 'head', 'bhead', 'Back of head');
+swap(BACK, 'throat', 'bneck', 'Back of neck');
+swap(BACK, 'chest', 'upback', 'Upper back');
+swap(BACK, 'belly', 'lowback', 'Lower back');
+swap(BACK, 'hips', 'bottom', 'Bottom / hips');
+swap(BACK, 'lshoulder', 'blshoulder', 'Left shoulder / arm (back)');
+swap(BACK, 'rshoulder', 'brshoulder', 'Right shoulder / arm (back)');
+swap(BACK, 'lleg', 'blleg', 'Back of left leg');
+swap(BACK, 'rleg', 'brleg', 'Back of right leg');
+const LABELS = {};
+[...FRONT, ...BACK].forEach(r => LABELS[r[0]] = r[1]);
+// Draw the front or back body map and attach tap handlers to each selectable area.
+function drawBody() {
+    const list = state.view === 'front' ? FRONT : BACK;
+    $('body').innerHTML = list.map(r => `<g class="region ${state.regions.has(r[0]) ? 'sel' : ''}" data-id="${r[0]}">${r[2]}</g>`).join('') +
+        '<text x="100" y="414" text-anchor="middle" fill="#9a97c0" font-size="11">' + (state.view === 'front' ? 'FRONT' : 'BACK') + '</text>';
+    $('body').querySelectorAll('.region').forEach(g => g.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        const id = g.dataset.id;
+        state.regions.has(id) ? state.regions.delete(id) : state.regions.add(id);
+        if (navigator.vibrate)
+            navigator.vibrate(12);
+        drawBody();
+        updateChips();
+    }));
+}
+function setView(v) { state.view = v; $('vf').classList.toggle('on', v === 'front'); $('vb').classList.toggle('on', v === 'back'); drawBody(); }
+// Refresh the list of selected body areas and enable Next only when at least one is selected.
+function updateChips() {
+    const c = $('chips');
+    c.innerHTML = state.regions.size ? [...state.regions].map(id => `<span class="chip">${LABELS[id]}</span>`).join('') : '<span class="empty">Nothing picked yet</span>';
+    $('n1').disabled = !state.regions.size;
+    $('h1').textContent = state.regions.size ? state.regions.size + ' area' + (state.regions.size > 1 ? 's' : '') + ' picked' : 'Pick at least one place';
+}
+drawBody();
+updateChips();
+/* ---------- step 2: textures ---------- */
+// Pain descriptions: severity values are prototype weights used later in the illustrative score.
+const TEX = [
+    { id: 'spiky', label: 'Spiky', sev: .75, desc: 'sharp, spiky' },
+    { id: 'burning', label: 'Burning', sev: .8, desc: 'hot, burning' },
+    { id: 'heavy', label: 'Heavy', sev: .55, desc: 'heavy, dull' },
+    { id: 'squeeze', label: 'Squeezing', sev: .7, desc: 'tight, squeezing' },
+    { id: 'tingly', label: 'Tingly', sev: .4, desc: 'tingly, fizzy' },
+    { id: 'stabbing', label: 'Stabbing', sev: .95, desc: 'stabbing, sudden' }
+];
+const tg = $('texgrid');
+TEX.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'tex';
+    b.dataset.id = t.id;
+    b.innerHTML = '<canvas></canvas><span>' + t.label + '</span>';
+    b.onclick = () => { state.texture = t.id; if (navigator.vibrate)
+        navigator.vibrate(15); tg.querySelectorAll('.tex').forEach(x => x.classList.toggle('sel', x === b)); $('n2').disabled = false; };
+    tg.appendChild(b);
+});
+let texRaf = 0;
+function stopTex() { cancelAnimationFrame(texRaf); }
+// Start the animated texture illustrations while the texture-selection screen is visible.
+function startTex() {
+    const cvs = [...tg.querySelectorAll('canvas')];
+    cvs.forEach(c => { const r = c.getBoundingClientRect(); c.width = Math.max(10, r.width) | 0; c.height = Math.max(10, r.height) | 0; });
+    const t0 = performance.now();
+    function frame(now) {
+        const t = (now - t0) / 1000;
+        cvs.forEach((c, i) => drawTex(c.getContext('2d'), TEX[i].id, c.width, c.height, t));
+        texRaf = requestAnimationFrame(frame);
+    }
+    texRaf = requestAnimationFrame(frame);
+}
+// Draw one animated visual that represents a pain description.
+function drawTex(g, id, w, h, t) {
+    g.clearRect(0, 0, w, h);
+    const cx = w / 2, cy = h * 0.42, R = Math.min(w, h) * 0.28;
+    if (id === 'spiky') {
+        g.fillStyle = '#c4b5fd';
+        const n = 14;
+        g.beginPath();
+        for (let i = 0; i < n * 2; i++) {
+            const a = i / (n * 2) * Math.PI * 2 + t * .3;
+            const r = i % 2 ? R * .55 : R * (1.15 + .15 * Math.sin(t * 5 + i));
+            g.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+        }
+        g.closePath();
+        g.shadowColor = '#a78bfa';
+        g.shadowBlur = 20;
+        g.fill();
+        g.shadowBlur = 0;
+    }
+    else if (id === 'burning') {
+        for (let i = 0; i < 26; i++) {
+            const ph = (t * .8 + i * .137) % 1;
+            const x = cx + Math.sin(i * 12.9 + t * 2) * R * .9;
+            const y = cy + R * .8 - ph * R * 2.1;
+            const r = (1 - ph) * R * .4 + 4;
+            const gr = g.createRadialGradient(x, y, 0, x, y, r);
+            gr.addColorStop(0, `rgba(255,${200 - ph * 150 | 0},40,${.9 - ph * .8})`);
+            gr.addColorStop(1, 'rgba(255,60,0,0)');
+            g.fillStyle = gr;
+            g.beginPath();
+            g.arc(x, y, r, 0, 7);
+            g.fill();
+        }
+    }
+    else if (id === 'heavy') {
+        const y = cy + Math.sin(t * 1.2) * 6 + R * .2;
+        g.fillStyle = '#64748b';
+        g.shadowColor = '#000';
+        g.shadowBlur = 24;
+        g.beginPath();
+        g.ellipse(cx, y, R * 1.1, R * .9, 0, 0, 7);
+        g.fill();
+        g.shadowBlur = 0;
+        g.fillStyle = 'rgba(255,255,255,.12)';
+        g.beginPath();
+        g.ellipse(cx - R * .3, y - R * .3, R * .4, R * .25, -.5, 0, 7);
+        g.fill();
+        g.fillStyle = 'rgba(0,0,0,.35)';
+        g.beginPath();
+        g.ellipse(cx, cy + R * 1.35, R * (1.1 + Math.sin(t * 1.2) * .05), R * .18, 0, 0, 7);
+        g.fill();
+    }
+    else if (id === 'squeeze') {
+        const k = .75 + .25 * Math.sin(t * 2.2);
+        g.strokeStyle = '#f472b6';
+        g.lineWidth = 14;
+        g.shadowColor = '#f472b6';
+        g.shadowBlur = 18;
+        for (let i = 0; i < 4; i++) {
+            const s = k * (1 - i * .17);
+            g.beginPath();
+            g.ellipse(cx, cy, R * 1.2 * s, R * 1.2 * s * (1 + .2 * Math.sin(t * 2.2 + i)), 0, 0, 7);
+            g.globalAlpha = 1 - i * .2;
+            g.stroke();
+        }
+        g.globalAlpha = 1;
+        g.shadowBlur = 0;
+    }
+    else if (id === 'tingly') {
+        for (let i = 0; i < 40; i++) {
+            const x = cx + Math.sin(i * 7.3 + t * 1.3) * R * 1.3, y = cy + Math.cos(i * 5.1 + t * 1.7) * R * 1.1;
+            g.fillStyle = `hsla(${170 + i * 3},90%,65%,${.4 + .5 * Math.sin(t * 6 + i)})`;
+            g.beginPath();
+            g.arc(x, y, 3 + Math.abs(Math.sin(t * 4 + i)) * 3, 0, 7);
+            g.fill();
+        }
+    }
+    else if (id === 'stabbing') {
+        const ph = (t * 1.4) % 1;
+        for (let i = 0; i < 3; i++) {
+            const x = cx + (i - 1) * R * .8, len = R * 2 * (ph < .3 ? ph / .3 : 1 - (ph - .3) / .7 * .7);
+            g.fillStyle = '#e2e8f0';
+            g.shadowColor = '#fff';
+            g.shadowBlur = 16;
+            g.beginPath();
+            g.moveTo(x - 8, cy - R * 1.2);
+            g.lineTo(x + 8, cy - R * 1.2);
+            g.lineTo(x, cy - R * 1.2 + len + (i % 2 ? 20 : 0));
+            g.closePath();
+            g.fill();
+        }
+        g.shadowBlur = 0;
+    }
+}
+/* ---------- step 3: slider + orb ---------- */
+const track = $('track'), knob = $('knob');
+let dragging = false;
+// Convert the slider position into a value from 0 (least) to 1 (most).
+function setIntensity(f) {
+    f = Math.max(0, Math.min(1, f));
+    state.intensity = f;
+    knob.style.left = (31 + f * (track.clientWidth - 62)) + 'px';
+    $('n3').disabled = false;
+    $('h3').textContent = f < .2 ? 'A little' : f < .45 ? 'Medium' : f < .75 ? 'Strong' : 'Very strong';
+}
+function posFromEvent(e) { const r = track.getBoundingClientRect(); return (e.clientX - r.left - 31) / (r.width - 62); }
+track.addEventListener('pointerdown', e => { dragging = true; track.setPointerCapture(e.pointerId); setIntensity(posFromEvent(e)); e.preventDefault(); });
+track.addEventListener('pointermove', e => { if (dragging)
+    setIntensity(posFromEvent(e)); });
+track.addEventListener('pointerup', () => dragging = false);
+track.addEventListener('pointercancel', () => dragging = false);
+const orb = $('orb'), og = orb.getContext('2d');
+function sizeOrb() { }
+function lerp(a, b, t) { return a + (b - a) * t; }
+// Choose a color along the grey-to-red scale for the selected intensity.
+function colorAt(f) {
+    const stops = [[0, [107, 114, 128]], [.15, [124, 138, 165]], [.55, [245, 158, 11]], [.78, [255, 90, 31]], [1, [255, 23, 68]]];
+    for (let i = 1; i < stops.length; i++)
+        if (f <= stops[i][0]) {
+            const a = stops[i - 1], b = stops[i], t = (f - a[0]) / (b[0] - a[0]);
+            return a[1].map((v, k) => lerp(v, b[1][k], t) | 0);
+        }
+    return stops[4][1];
+}
+// Animate the central orb so its color and pulse reflect the chosen intensity.
+function drawOrb() {
+    if (step !== 3)
+        return;
+    const f = state.intensity == null ? 0 : state.intensity, t = performance.now() / 1000;
+    const [r, g, b] = colorAt(f), W = orb.width, H = orb.height, c = W / 2;
+    og.clearRect(0, 0, W, H);
+    const rate = 1 + f * 4, pulse = .5 + .5 * Math.sin(t * rate * Math.PI);
+    const base = W * (.2 + f * .12), R = base * (1 + pulse * (.05 + f * .15));
+    const gr = og.createRadialGradient(c, c, 0, c, c, R * 2.2);
+    gr.addColorStop(0, `rgba(${r},${g},${b},.9)`);
+    gr.addColorStop(.45, `rgba(${r},${g},${b},.35)`);
+    gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    og.fillStyle = gr;
+    og.beginPath();
+    og.arc(c, c, R * 2.2, 0, 7);
+    og.fill();
+    og.fillStyle = `rgb(${r},${g},${b})`;
+    og.shadowColor = `rgb(${r},${g},${b})`;
+    og.shadowBlur = 40;
+    og.beginPath();
+    const spikes = Math.round(f * f * 14);
+    for (let i = 0; i <= 120; i++) {
+        const a = i / 120 * Math.PI * 2;
+        const wob = f > .5 ? Math.sin(a * spikes + t * 6) * R * .06 * f : 0;
+        og.lineTo(c + Math.cos(a) * (R + wob), c + Math.sin(a) * (R + wob));
+    }
+    og.fill();
+    og.shadowBlur = 0;
+    requestAnimationFrame(drawOrb);
+}
+/* ---------- step 4: rhythm ---------- */
+const pad = $('pad'), pc = $('padc'), pg = pc.getContext('2d');
+let taps = [], ripples = [], holdTimer = null, holding = false, mode = null, heldAt = 0;
+// Match the rhythm canvas's drawing resolution to the size of its container.
+function sizePad() { const r = pad.getBoundingClientRect(); pc.width = r.width | 0; pc.height = r.height | 0; }
+window.addEventListener('resize', () => {
+    if (step === 4)
+        sizePad();
+    if (step === 3 && state.intensity != null)
+        setIntensity(state.intensity);
+    if (step === 5)
+        drawTimeline();
+});
+function drawDemo(W, H, now) {
+    /* demo circle: shows the beat before the child taps anything */
+    const beat = (now % 860) / 860, cx = W / 2, cy = H * .6, base = Math.min(W, H) * .1;
+    const k = Math.max(0, 1 - beat * 3.2);
+    pg.shadowColor = '#a78bfa';
+    pg.shadowBlur = 24;
+    pg.fillStyle = 'rgba(167,139,250,.92)';
+    pg.beginPath();
+    pg.arc(cx, cy, base * (1 + k * .45), 0, 7);
+    pg.fill();
+    pg.shadowBlur = 0;
+    pg.strokeStyle = `rgba(167,139,250,${1 - beat})`;
+    pg.lineWidth = 4;
+    pg.beginPath();
+    pg.arc(cx, cy, base + beat * base * 2.2, 0, 7);
+    pg.stroke();
+    pg.font = '700 ' + Math.max(16, base * .4) + 'px -apple-system,sans-serif';
+    pg.fillStyle = '#f2f0ff';
+    pg.textAlign = 'center';
+    pg.fillText('👆 Tap like this', cx, cy + base * 2.5);
+}
+// Continuously draw the rhythm screen's demo pulse, hold effect, and tap ripples.
+function padLoop() {
+    if (step !== 4)
+        return;
+    const W = pc.width, H = pc.height, now = performance.now();
+    pg.clearRect(0, 0, W, H);
+    const col = colorAt(state.intensity == null ? .5 : state.intensity).join(',');
+    if (!taps.length && !mode && !holding)
+        drawDemo(W, H, now);
+    if (mode === 'constant' || holding) {
+        const hold = holding ? Math.min(1, (now - heldAt) / 1200) : 1;
+        const gr = pg.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.min(W, H) * .6);
+        gr.addColorStop(0, `rgba(${col},${.5 * hold})`);
+        gr.addColorStop(1, `rgba(${col},0)`);
+        pg.fillStyle = gr;
+        pg.fillRect(0, 0, W, H);
+    }
+    ripples = ripples.filter(r => now - r.t < 900);
+    ripples.forEach(r => {
+        const p = (now - r.t) / 900;
+        pg.strokeStyle = `rgba(${col},${1 - p})`;
+        pg.lineWidth = 6 * (1 - p) + 1;
+        pg.shadowColor = `rgb(${col})`;
+        pg.shadowBlur = 20;
+        pg.beginPath();
+        pg.arc(r.x, r.y, 20 + p * Math.min(W, H) * .45, 0, 7);
+        pg.stroke();
+    });
+    pg.shadowBlur = 0;
+    requestAnimationFrame(padLoop);
+}
+pad.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    const r = pad.getBoundingClientRect(), now = performance.now();
+    if (mode === 'constant')
+        return;
+    $('padmsg').style.display = 'none';
+    ripples.push({ x: e.clientX - r.left, y: e.clientY - r.top, t: now });
+    if (navigator.vibrate)
+        navigator.vibrate(18);
+    taps.push(now);
+    holding = true;
+    heldAt = now;
+    clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => { if (holding) {
+        mode = 'constant';
+        taps = [];
+        holding = false;
+        updateRhythm();
+    } }, 1200);
+    updateRhythm();
+});
+function endHold() { holding = false; clearTimeout(holdTimer); }
+pad.addEventListener('pointerup', endHold);
+pad.addEventListener('pointercancel', endHold);
+// Estimate the tapping rhythm. At least four taps are needed for a beat estimate.
+function analyze() {
+    if (mode === 'constant')
+        return { type: 'constant' };
+    if (taps.length < 4)
+        return null;
+    const iv = [];
+    for (let i = 1; i < taps.length; i++)
+        iv.push(taps[i] - taps[i - 1]);
+    const mean = iv.reduce((a, b) => a + b, 0) / iv.length;
+    const sd = Math.sqrt(iv.reduce((a, b) => a + (b - mean) ** 2, 0) / iv.length);
+    return { type: 'throbbing', bpm: Math.round(60000 / mean), cv: sd / mean, n: taps.length };
+}
+// Show the tap count and estimated beat, then enable Next when a pattern is recorded.
+function updateRhythm() {
+    const a = analyze();
+    $('st1').textContent = 'Taps: ' + taps.length;
+    if (mode === 'constant') {
+        $('st1').textContent = 'Steady';
+        $('st2').textContent = 'Beat: none, it never stops';
+        $('padmsg').style.display = 'block';
+        $('padmsg').innerHTML = 'Steady pain<small>Tap "Try again" to change</small>';
+    }
+    else
+        $('st2').textContent = a ? 'Beat: ' + a.bpm + ' per minute' : 'Beat: –';
+    $('n4').disabled = !a;
+    $('h4').textContent = a ? (a.type === 'constant' ? 'Steady pain recorded' : 'Rhythm recorded. You can keep tapping or continue.') : (taps.length ? 'Keep tapping the beat (' + Math.max(0, 4 - taps.length) + ' more)' : '');
+    state.rhythm = a;
+}
+function resetRhythm() { taps = []; mode = null; holding = false; ripples = []; $('padmsg').style.display = 'block'; $('padmsg').innerHTML = 'Tap here<small>Tap the same beat as the pain</small>'; updateRhythm(); }
+function chooseConstant() { mode = 'constant'; taps = []; updateRhythm(); }
+/* ---------- step 5: onset ---------- */
+// Start-time choices: these labels are recorded in the summary.
+const ONSET = [
+    { id: 'now', e: '⚡', label: 'Just now', sub: 'in the last hour', txt: 'just now (within the last hour)' },
+    { id: 'today', e: '☀️', label: 'Today', sub: 'earlier today', txt: 'earlier today' },
+    { id: 'yday', e: '🌙', label: 'Yesterday', sub: '', txt: 'yesterday' },
+    { id: 'days', e: '📅', label: 'A few days', sub: '2 to 6 days ago', txt: '2 to 6 days ago' },
+    { id: 'week', e: '🗓️', label: 'A week or more', sub: '1 to 4 weeks', txt: '1 to 4 weeks ago' },
+    { id: 'long', e: '🌳', label: 'A long time', sub: 'over a month', txt: 'over a month ago' }
+];
+const onsetGrid = $('onsetgrid');
+ONSET.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = '<i>' + o.e + '</i>' + o.label + (o.sub ? '<small>' + o.sub + '</small>' : '');
+    b.onclick = () => {
+        state.onset = o.id;
+        if (navigator.vibrate)
+            navigator.vibrate(15);
+        onsetGrid.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === b));
+        $('n6').disabled = false;
+    };
+    onsetGrid.appendChild(b);
+});
+/* ---------- step 6: time of day ---------- */
+const TIMES = [['morning', '🌅', 'Morning'], ['afternoon', '☀️', 'Afternoon'], ['evening', '🌇', 'Evening'], ['night', '🌙', 'Night']];
+const timeGrid = $('timegrid');
+// Build the time-of-day buttons and keep their selected states in sync with the answers.
+function drawTimes() {
+    timeGrid.innerHTML = TIMES.map(t => `<button class="opt ${state.times.has(t[0]) ? 'sel' : ''}" data-id="${t[0]}"><i>${t[1]}</i>${t[2]}</button>`).join('') +
+        `<button class="opt ${state.times.size === 4 ? 'sel' : ''}" data-id="all"><i>♾️</i>All day and night</button>`;
+    timeGrid.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+        const id = b.dataset.id;
+        if (id === 'all') {
+            if (state.times.size === 4)
+                state.times.clear();
+            else
+                TIMES.forEach(t => state.times.add(t[0]));
+        }
+        else
+            state.times.has(id) ? state.times.delete(id) : state.times.add(id);
+        if (navigator.vibrate)
+            navigator.vibrate(15);
+        drawTimes();
+    });
+    $('n7').disabled = !state.times.size;
+}
+drawTimes();
+function timeText() {
+    if (state.times.size === 4)
+        return 'All day and night';
+    return TIMES.filter(t => state.times.has(t[0])).map(t => t[2].toLowerCase()).join(', ');
+}
+/* ---------- step 7: history paste + timeline ---------- */
+let entries = [], tlRange = 'day', combinedText = '';
+// Read earlier Pain Palette summaries and extract their date and score for the timeline.
+function parseEntries(txt) {
+    const out = [];
+    txt.split(/Pain Palette summary/i).forEach(b => {
+        const d = b.match(/Date:\s*(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2}))?/i);
+        const s = b.match(/Score:\s*(\d+(?:\.\d+)?)\s*\/\s*10/i);
+        if (!d || !s)
+            return;
+        const t = new Date(+d[1], +d[2] - 1, +d[3], +(d[4] || 12), +(d[5] || 0)).getTime();
+        out.push({ t, score: parseFloat(s[1]), raw: 'Pain Palette summary' + b.trimEnd() });
+    });
+    return out;
+}
+function histInfo() {
+    const n = parseEntries($('hist').value).length;
+    $('h8').textContent = n ? n + ' earlier check' + (n > 1 ? 's' : '') + ' found' : ($('hist').value.trim() ? 'Could not read that' : 'Nothing pasted');
+}
+function stamp(d) { const p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+function bucket(t, r) {
+    const d = new Date(t), x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    if (r === 'day')
+        return x.getTime();
+    if (r === 'week') {
+        x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+        return x.getTime();
+    }
+    return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+}
+function setRange(r) { tlRange = r; ['day', 'week', 'month'].forEach(k => $('tl_' + k).classList.toggle('on', k === r)); drawTimeline(); }
+// Group saved scores by day, week, or month and draw them on the timeline canvas.
+function drawTimeline() {
+    const c = $('tlc'), dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+    if (!w || !entries.length)
+        return;
+    c.width = w * dpr;
+    c.height = h * dpr;
+    const g = c.getContext('2d');
+    g.scale(dpr, dpr);
+    g.clearRect(0, 0, w, h);
+    const m = new Map();
+    entries.forEach(e => { const k = bucket(e.t, tlRange); if (!m.has(k))
+        m.set(k, []); m.get(k).push(e.score); });
+    const pts = [...m].sort((a, b) => a[0] - b[0]).map(([t, v]) => ({ t, s: v.reduce((a, b) => a + b, 0) / v.length }));
+    const L = 30, R = 16, T = 12, B = 28, pw = w - L - R, ph = h - T - B;
+    g.font = '12px -apple-system,sans-serif';
+    g.fillStyle = '#9a97c0';
+    g.strokeStyle = '#2a2a4a';
+    g.lineWidth = 1;
+    g.textAlign = 'right';
+    [0, 5, 10].forEach(v => { const y = T + ph * (1 - v / 10); g.beginPath(); g.moveTo(L, y); g.lineTo(w - R, y); g.stroke(); g.fillText(v, L - 6, y + 4); });
+    const t0 = pts[0].t, t1 = pts[pts.length - 1].t;
+    pts.forEach(p => { p.x = pts.length === 1 ? L + pw / 2 : L + pw * (p.t - t0) / (t1 - t0); p.y = T + ph * (1 - p.s / 10); });
+    g.strokeStyle = '#a78bfa';
+    g.lineWidth = 3;
+    g.lineJoin = 'round';
+    g.beginPath();
+    pts.forEach((p, i) => i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y));
+    g.stroke();
+    const mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let lastX = -99;
+    g.textAlign = 'center';
+    pts.forEach(p => {
+        g.fillStyle = 'rgb(' + colorAt(p.s / 10).join(',') + ')';
+        g.beginPath();
+        g.arc(p.x, p.y, 6, 0, 7);
+        g.fill();
+        if (p.x - lastX > 60) {
+            const d = new Date(p.t);
+            g.fillStyle = '#9a97c0';
+            g.fillText(tlRange === 'month' ? mon[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) : d.getDate() + ' ' + mon[d.getMonth()], p.x, h - 8);
+            lastX = p.x;
+        }
+    });
+    $('tlnote').textContent = (entries.length < 2 ? 'Only one check so far. Paste earlier summaries at step 7 to see a timeline. ' : '') +
+        (tlRange === 'day' ? 'Each dot is one day (average if checked more than once).' : tlRange === 'week' ? 'Each dot is the average for one week (weeks start Monday).' : 'Each dot is the average for one month.');
+}
+/* ---------- result + scoring ---------- */
+// Combine the selected answers using the prototype's stated placeholder weights.
+function compute() {
+    const tex = TEX.find(t => t.id === state.texture);
+    const inten = state.intensity;
+    let rh = 0;
+    const r = state.rhythm;
+    if (r.type === 'constant')
+        rh = .6;
+    else {
+        const rate = Math.min(1, Math.max(0, (r.bpm - 40) / 140));
+        const regular = Math.max(0, 1 - Math.min(1, r.cv * 2));
+        rh = .3 + .7 * rate * (.6 + .4 * regular);
+    }
+    const areas = Math.min(1, state.regions.size / 5);
+    const raw = .55 * inten + .20 * tex.sev + .15 * rh + .10 * areas;
+    return { score: Math.round(raw * 100) / 10, tex, inten, rh, areas };
+}
+function level(s) { return s < 2.5 ? ['Mild', 'Probably a small hurt.'] : s < 5 ? ['Moderate', 'Noticeable pain.'] : s < 7.5 ? ['Strong', 'Strong pain. Check in with the child soon.'] : ['Severe', 'Very strong pain. Tell a nurse or doctor now.']; }
+let summaryText = '';
+// Build the result screen and text summary, then combine this check with any pasted history.
+function finish() {
+    const c = compute(), [lv, msg] = level(c.score), r = state.rhythm;
+    const regions = [...state.regions].map(id => LABELS[id]).join(', ');
+    const intensityWord = c.inten < .2 ? 'very low' : c.inten < .45 ? 'medium' : c.inten < .75 ? 'high' : 'very high';
+    const rhythmTxt = r.type === 'constant' ? 'Constant (does not pulse)' : 'Throbbing, about ' + r.bpm + ' beats/min (' + (r.cv < .2 ? 'regular' : r.cv < .4 ? 'fairly regular' : 'irregular') + ' tapping)';
+    const onset = ONSET.find(o => o.id === state.onset), timing = timeText(), now = new Date();
+    $('sc').textContent = c.score.toFixed(1);
+    const col = colorAt(Math.min(1, c.score / 10)).join(',');
+    $('ring').style.background = `conic-gradient(rgb(${col}) ${c.score * 36}deg,#2a2a4a 0)`;
+    $('ring').style.boxShadow = `0 0 30px rgba(${col},.45)`;
+    $('lvl').textContent = lv;
+    $('lvlsub').textContent = msg;
+    const items = [['Where', regions], ['Feels like', c.tex.desc], ['Intensity', intensityWord + ' (' + Math.round(c.inten * 100) + '% of scale)'], ['Pattern', rhythmTxt], ['Started', onset.txt], ['When it hurts', timing]];
+    $('rows').innerHTML = items.map(i => `<div class="row"><h4>${i[0]}</h4><p>${i[1]}</p></div>`).join('');
+    summaryText = `Pain Palette summary (prototype)\nDate: ${stamp(now)}\nScore: ${c.score.toFixed(1)}/10 (${lv})\nLocation: ${regions}\nQuality: ${c.tex.desc}\nIntensity: ${intensityWord} (${Math.round(c.inten * 100)}%)\nPattern: ${rhythmTxt}\nStarted: ${onset.txt}\nTiming: ${timing}\nNote: not clinically validated.`;
+    $('clin').textContent = 'For the clinician: ' + summaryText.split('\n').slice(3, 9).join(' | ');
+    /* merge pasted history + this check (dedupe by timestamp) */
+    const seen = new Set();
+    entries = parseEntries($('hist').value).concat([{ t: now.getTime(), score: c.score, raw: summaryText }])
+        .sort((a, b) => a.t - b.t).filter(e => !seen.has(e.t) && seen.add(e.t));
+    combinedText = entries.map(e => e.raw).join('\n\n');
+    go(5);
+    curPrompt = 'Your pain score is ' + c.score.toFixed(1) + ' out of 10. ' + msg + ' A grown-up can copy the summary.';
+    setRange('day');
+}
+// Copy the current and earlier summaries so a grown-up can save them elsewhere.
+function copySummary() {
+    const done = () => { $('cpy').textContent = 'Copied'; setTimeout(() => $('cpy').textContent = 'Copy summary', 1500); };
+    if (navigator.clipboard)
+        navigator.clipboard.writeText(combinedText).then(done, fallback);
+    else
+        fallback();
+    function fallback() { const t = document.createElement('textarea'); t.value = combinedText; document.body.appendChild(t); t.select(); try {
+        document.execCommand('copy');
+    }
+    catch (e) { } t.remove(); done(); }
+}
+// Clear the answers and visual effects so a new check can begin.
+function restart() {
+    state.regions.clear();
+    state.texture = null;
+    state.intensity = null;
+    state.rhythm = null;
+    state.view = 'front';
+    state.onset = null;
+    state.times.clear();
+    taps = [];
+    mode = null;
+    ripples = [];
+    tg.querySelectorAll('.tex').forEach(x => x.classList.remove('sel'));
+    $('n2').disabled = true;
+    $('n3').disabled = true;
+    onsetGrid.querySelectorAll('.opt').forEach(x => x.classList.remove('sel'));
+    $('n6').disabled = true;
+    drawTimes();
+    $('hist').value = '';
+    histInfo();
+    setView('front');
+    updateChips();
+    resetRhythm();
+    $('h3').textContent = 'Drag the circle';
+    go(0);
+}
+['gesturestart', 'dblclick'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+</script>
+</body>
+</html>
